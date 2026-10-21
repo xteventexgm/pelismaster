@@ -1,0 +1,14 @@
+{
+  "id": "com.pelismaster.tv",
+  "version": "2.0.0",
+  "vendor": "Steven",
+  "type": "web",
+  "main": "index.html",
+  "title": "PelisMaster TV",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "bgColor": "#141414",
+  "requiredPermissions": [
+    "network"
+  ]
+}

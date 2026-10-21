@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1920, height=1080, initial-scale=1.0, user-scalable=no">
+  <title>PelisMaster TV</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- TV NAVIGATION HEADER -->
+  <header class="header">
+    <a href="#" class="brand focusable" onclick="App.navigateTo('home'); return false;">
+      <span class="brand-icon">M</span>
+      <span>PELISMASTER</span>
+    </a>
+    <nav class="nav-links">
+      <a href="#" class="nav-item focusable active" data-view="home">Inicio</a>
+      <a href="#" class="nav-item focusable" data-view="movies" data-sort="recent">Películas</a>
+      <a href="#" class="nav-item focusable" data-view="series" data-sort="recent">Series</a>
+      <a href="#" class="nav-item focusable" data-view="genres">Géneros</a>
+      <a href="#" class="nav-item focusable" data-view="mylist">Mi lista</a>
+    </nav>
+    <div class="header-right">
+      <button id="btn-nav-search" class="search-btn focusable" type="button">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+        <span>Buscar</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- VIEWS CONTAINER -->
+  <main class="views-wrapper">
+
+    <!-- 1. HOME VIEW -->
+    <section id="view-home" class="view active">
+      <!-- Hero Billboard -->
+      <div class="hero-section">
+        <div id="hero-bg" class="hero-bg"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+          <img id="hero-logo-img" class="hero-logo-img" src="" alt="" style="display:none;">
+          <h1 id="hero-title" class="hero-title"></h1>
+          <div class="hero-meta">
+            <span id="hero-match" class="match-score"></span>
+            <span id="hero-year"></span>
+            <span id="hero-duration"></span>
+          </div>
+          <div id="hero-genres" class="hero-genres"></div>
+          <p id="hero-overview" class="hero-overview"></p>
+          <div class="hero-buttons">
+            <button id="hero-btn-play" class="btn btn-primary focusable">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M7 4v16l13-8z"></path></svg>
+              <span>Reproducir</span>
+            </button>
+            <button id="hero-btn-info" class="btn btn-secondary focusable">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"></circle><path d="M12 11v6M12 7.5v.5"></path></svg>
+              <span>Más info</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rows & Rails -->
+      <div class="rows-container">
+        <!-- Seguir viendo (LocalStorage) -->
+        <section id="row-continue-watching" class="row" style="display:none;">
+          <div class="row-header">
+            <h2 class="row-title">Seguir viendo</h2>
+          </div>
+          <div id="rail-continue-watching" class="rail"></div>
+        </section>
+
+        <!-- Top 10 de hoy -->
+        <section class="row">
+          <div class="row-header">
+            <h2 class="row-title">Top 10 de hoy</h2>
+          </div>
+          <div id="rail-top10" class="rail"></div>
+        </section>
+
+        <!-- Dynamic Category Rails -->
+        <div id="home-rails-container"></div>
+      </div>
+    </section>
+
+    <!-- 2. CATALOG VIEW (Movies / Series) -->
+    <section id="view-movies" class="view catalog-page">
+      <div class="catalog-header">
+        <h1 id="catalog-title" class="catalog-title">Películas</h1>
+        <p id="catalog-subtitle" class="catalog-subtitle"></p>
+        <div class="filter-pills catalog-pills">
+          <button class="pill-btn focusable active" data-sort="recent" onclick="App.renderCatalog('movies', 'recent')">Recién añadidas</button>
+          <button class="pill-btn focusable" data-sort="popular" onclick="App.renderCatalog('movies', 'popular')">Populares</button>
+          <button class="pill-btn focusable" data-sort="rating" onclick="App.renderCatalog('movies', 'rating')">Mejor valoradas</button>
+          <button class="pill-btn focusable" data-sort="release" onclick="App.renderCatalog('movies', 'release')">Estreno</button>
+          <button class="pill-btn focusable" data-sort="trending" onclick="App.renderCatalog('movies', 'trending')">Tendencia</button>
+        </div>
+      </div>
+      <div id="catalog-grid" class="cards-grid"></div>
+    </section>
+
+    <!-- Series View shares the same layout -->
+    <section id="view-series" class="view catalog-page">
+      <div class="catalog-header">
+        <h1 class="catalog-title">Series</h1>
+        <p id="series-subtitle" class="catalog-subtitle"></p>
+        <div class="filter-pills series-pills">
+          <button class="pill-btn focusable active" data-sort="recent" onclick="App.renderCatalog('series', 'recent')">Recién añadidas</button>
+          <button class="pill-btn focusable" data-sort="popular" onclick="App.renderCatalog('series', 'popular')">Populares</button>
+          <button class="pill-btn focusable" data-sort="rating" onclick="App.renderCatalog('series', 'rating')">Mejor valoradas</button>
+          <button class="pill-btn focusable" data-sort="release" onclick="App.renderCatalog('series', 'release')">Estreno</button>
+          <button class="pill-btn focusable" data-sort="trending" onclick="App.renderCatalog('series', 'trending')">Tendencia</button>
+        </div>
+      </div>
+      <div id="series-grid" class="cards-grid"></div>
+    </section>
+
+    <!-- 3. GENRES VIEW -->
+    <section id="view-genres" class="view catalog-page">
+      <div class="catalog-header">
+        <h1 class="catalog-title">Géneros</h1>
+        <p class="catalog-subtitle">26 categorías disponibles</p>
+      </div>
+      <div id="genres-grid" class="cards-grid"></div>
+    </section>
+
+    <!-- Genre Items View -->
+    <section id="view-genre-items" class="view catalog-page">
+      <div class="catalog-header">
+        <h1 id="genre-items-title" class="catalog-title">Género</h1>
+      </div>
+      <div id="genre-items-grid" class="cards-grid"></div>
+    </section>
+
+    <!-- 4. SEARCH VIEW -->
+    <section id="view-search" class="view catalog-page">
+      <div class="catalog-header">
+        <h1 class="catalog-title">Buscar</h1>
+        <div style="margin-top:16px; max-width:640px;">
+          <input id="search-input" class="focusable" type="search" placeholder="Busca películas, series, actores…" style="width:100%; padding:14px 20px; font-size:18px; border-radius:6px; background:#222; border:1px solid #444; color:#fff;">
+        </div>
+      </div>
+      <div id="search-results-grid" class="cards-grid"></div>
+    </section>
+
+    <!-- 5. MY LIST VIEW -->
+    <section id="view-mylist" class="view catalog-page">
+      <div class="catalog-header">
+        <h1 class="catalog-title">Mi lista</h1>
+        <p class="catalog-subtitle">Lo que guardaste y lo que estás viendo. Se guarda solo en este dispositivo.</p>
+      </div>
+      <div style="margin-bottom:36px;">
+        <h2 class="row-title" style="margin-bottom:14px;">Seguir viendo</h2>
+        <div id="mylist-recents-grid" class="cards-grid"></div>
+      </div>
+      <div>
+        <h2 class="row-title" style="margin-bottom:14px;">Títulos guardados</h2>
+        <div id="mylist-favs-grid" class="cards-grid"></div>
+      </div>
+    </section>
+
+    <!-- 6. DETAIL VIEW -->
+    <section id="view-detail" class="view"></section>
+
+  </main>
+
+  <!-- 7. FULLSCREEN NATIVE VIDEO PLAYER VIEW -->
+  <div id="player-view" class="player-view">
+    <video id="video-element" playsinline preload="auto"></video>
+
+    <!-- Spinner Loading -->
+    <div id="player-spinner" class="spinner-overlay" style="display:none;">
+      <div class="spinner"></div>
+      <span class="spinner-text">Cargando video...</span>
+    </div>
+
+    <!-- Timeline Scrubber Bubble (YouTube TV Style) -->
+    <div id="player-seek-bubble" class="player-seek-bubble" style="display:none;">
+      <div class="seek-bubble-box">
+        <span id="seek-bubble-time" class="seek-bubble-time">0:00</span>
+        <span id="seek-bubble-diff" class="seek-bubble-diff">+0:00</span>
+      </div>
+    </div>
+
+    <!-- Next Episode Countdown Banner (Netflix Style) -->
+    <div id="player-next-countdown" class="next-countdown-banner" style="display:none;">
+      <div class="next-countdown-card">
+        <p id="next-countdown-ep-title" class="next-countdown-title">Siguiente episodio en <b id="countdown-seconds">5</b>s</p>
+        <div style="display:flex; justify-content:center; margin-top:12px;">
+          <button id="btn-next-now" class="btn btn-primary focusable">▶ Reproducir ahora</button>
+          <button id="btn-next-cancel" class="btn btn-secondary focusable">✕ Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Netflix-style OSD -->
+    <div id="player-osd" class="player-osd">
+      <div class="osd-top">
+        <button id="osd-btn-back" class="osd-back-btn focusable" title="Volver">‹</button>
+        <div class="osd-title-group">
+          <h2 id="player-title"></h2>
+          <p id="player-subtitle"></p>
+        </div>
+      </div>
+
+      <div class="osd-bottom">
+        <div class="osd-progress-container">
+          <span id="player-time-current" class="progress-time">0:00</span>
+          <div class="progress-track" id="player-progress-track">
+            <div id="player-progress-filled" class="progress-filled"></div>
+          </div>
+          <span id="player-time-duration" class="progress-time">0:00</span>
+        </div>
+        <div class="osd-controls">
+          <button id="osd-btn-rewind" class="osd-btn focusable" title="Retroceder 1m">« 1m</button>
+          <button id="osd-btn-play" class="osd-btn focusable" title="Play/Pausa">❚❚</button>
+          <button id="osd-btn-forward" class="osd-btn focusable" title="Avanzar 1m">1m »</button>
+          <button id="osd-btn-next-ep" class="osd-btn focusable" title="Siguiente episodio" style="display:none;">Siguiente ep. »</button>
+          <select id="player-server-select" class="osd-select focusable" title="Servidor / Idioma"></select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPLICATION SCRIPTS (Order matters for ES5 dependencies) -->
+  <script src="js/spatial-nav.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

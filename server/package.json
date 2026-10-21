@@ -1,0 +1,16 @@
+{
+  "name": "pelismaster-tv-server",
+  "version": "1.0.0",
+  "description": "Backend API, Scraper y Stream Resolver para cliente LG webOS Smart TV",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  }
+}

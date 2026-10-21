@@ -1,0 +1,15 @@
+{
+  "name": "pelismaster-tv",
+  "version": "1.0.0",
+  "description": "PelisMaster TV Web App and Scraper for LG webOS Smart TV",
+  "type": "module",
+  "main": "server/src/index.js",
+  "scripts": {
+    "start": "node server/src/index.js"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  }
+}
