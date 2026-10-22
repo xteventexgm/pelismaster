@@ -12,8 +12,8 @@
 }
 
 html {
-  width: 1920px;
-  min-height: 1080px;
+  width: 100%;
+  min-height: 100%;
   margin: 0;
   padding: 0;
   background-color: #141414;
@@ -22,8 +22,8 @@ html {
 }
 
 body {
-  width: 1920px;
-  min-height: 1080px;
+  width: 100%;
+  min-height: 100%;
   margin: 0;
   padding: 0;
   background-color: #141414;
