@@ -117,9 +117,9 @@ router.get('/stream/:type/:slug', async (req, res) => {
   }
 });
 
-// GET /api/proxy/m3u8?url=...
+// GET /api/proxy/stream.m3u8?url=... (also supports /api/proxy/m3u8)
 // Proxies m3u8 playlists through this server to avoid 403 "sesión no coincide" IP session errors on cloud deployments
-router.get('/proxy/m3u8', async (req, res) => {
+router.get(['/proxy/stream.m3u8', '/proxy/m3u8'], async (req, res) => {
   try {
     const rawUrl = req.query.url;
     if (!rawUrl) {
@@ -165,7 +165,7 @@ router.get('/proxy/m3u8', async (req, res) => {
 
       // If this line is another playlist (.m3u8 or moviemaster.lat /s/ stream), proxy it
       if (absUrl.includes('.m3u8') || absUrl.includes('moviemaster.lat')) {
-        return `/api/proxy/m3u8?url=${encodeURIComponent(absUrl)}`;
+        return `/api/proxy/stream.m3u8?url=${encodeURIComponent(absUrl)}`;
       }
 
       // Direct media segment chunk (TikTok CDN, Akamai, etc.) stays direct for max speed
@@ -175,8 +175,9 @@ router.get('/proxy/m3u8', async (req, res) => {
     res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Headers', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.send(rewritten);
+    res.end(Buffer.from(rewritten, 'utf-8'));
   } catch (err) {
     console.error('m3u8 proxy error:', err.message);
     res.status(500).send(err.message);

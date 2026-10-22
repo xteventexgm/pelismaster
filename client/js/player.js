@@ -257,15 +257,16 @@
         url = baseOrigin + url;
       }
 
-      var isHls = url.indexOf('.m3u8') !== -1;
-      var canPlayNativeHls = false;
-      try {
-        canPlayNativeHls = !!(this.video.canPlayType('application/vnd.apple.mpegurl') ||
-                              this.video.canPlayType('application/x-mpegURL'));
-      } catch(e) {}
+      var isWebOSTV = /Web0S|webOS|LG NetCast|LG Browser/i.test(navigator.userAgent) || !!window.webOS;
+      var isHls = url.indexOf('.m3u8') !== -1 || url.indexOf('/proxy/') !== -1 ||
+                  (this.currentStreamData && this.currentStreamData.streamType === 'hls');
 
-      // If browser cannot play HLS natively (e.g. desktop Chrome/Edge) and Hls.js is loaded
-      if (isHls && !canPlayNativeHls && window.Hls && Hls.isSupported()) {
+      console.log('[Player] startPlayback URL:', url);
+      console.log('[Player] isHls:', isHls, 'isWebOSTV:', isWebOSTV, 'Hls global:', typeof window.Hls);
+
+      // In desktop/mobile web browsers (not webOS TV), ALWAYS use Hls.js whenever available
+      if (isHls && !isWebOSTV && window.Hls && Hls.isSupported()) {
+        console.log('[Player] -> Using Hls.js engine');
         this.video.removeAttribute('src');
         this.hls = new Hls({
           enableWorker: true,
@@ -276,24 +277,25 @@
         this.hls.attachMedia(this.video);
 
         this.hls.on(Hls.Events.MANIFEST_PARSED, function() {
+          console.log('[Player] Manifest parsed, starting play');
           var p = self.video.play();
           if (p && p.catch) {
             p.catch(function(e) {
-              console.warn('Autoplay prevented, retrying on interaction:', e);
+              console.warn('[Player] Autoplay prevented, waiting for user click:', e);
             });
           }
         });
 
         this.hls.on(Hls.Events.ERROR, function(event, data) {
           if (data.fatal) {
-            console.error('Fatal HLS error:', data.type, data.details);
+            console.error('[Player] Fatal HLS error:', data.type, data.details);
             switch (data.type) {
               case Hls.ErrorTypes.NETWORK_ERROR:
-                console.warn('HLS Network error, attempting recovery...');
+                console.warn('[Player] HLS Network error, attempting recovery...');
                 self.hls.startLoad();
                 break;
               case Hls.ErrorTypes.MEDIA_ERROR:
-                console.warn('HLS Media error, attempting recovery...');
+                console.warn('[Player] HLS Media error, attempting recovery...');
                 self.hls.recoverMediaError();
                 break;
               default:
@@ -304,7 +306,8 @@
           }
         });
       } else {
-        // Native HLS (webOS TV / Safari) or direct MP4
+        // Native HTML5 video playback (webOS Smart TV hardware, Safari, or direct MP4)
+        console.log('[Player] -> Using native <video> element');
         this.video.removeAttribute('src');
         if (isHls) {
           this.video.type = 'application/x-mpegURL';
@@ -317,7 +320,7 @@
         var playPromise = this.video.play();
         if (playPromise && playPromise.catch) {
           playPromise.catch(function(e) {
-            console.warn('Autoplay prevented, retrying on interaction:', e);
+            console.warn('[Player] Native play failed/prevented:', e);
           });
         }
       }
@@ -645,6 +648,9 @@
 
     onError: function(e) {
       console.error('Video playback error:', e);
+      if (this.video && this.video.error) {
+        console.error('HTML5 Video Error Details -> Code:', this.video.error.code, 'Message:', this.video.error.message);
+      }
       clearTimeout(this.waitingTimer);
       this.showSpinner(false);
     },

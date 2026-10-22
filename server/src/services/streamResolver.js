@@ -186,8 +186,8 @@ export const resolveStream = async ({ type = 'movie', slug, season, episode, ser
   let streamUrl = resolvedData.url;
   // If the stream is an HLS playlist or comes from moviemaster.lat, route it via our m3u8 proxy
   // to avoid "403 sesión no coincide" IP session mismatches when deployed on cloud/Render
-  if (streamUrl && (streamUrl.includes('.m3u8') || streamUrl.includes('moviemaster.lat'))) {
-    streamUrl = `/api/proxy/m3u8?url=${encodeURIComponent(streamUrl)}`;
+  if (streamUrl && (streamUrl.includes('.m3u8') || streamUrl.includes('moviemaster.lat') || resolvedData.type === 'hls')) {
+    streamUrl = `/api/proxy/stream.m3u8?url=${encodeURIComponent(streamUrl)}`;
   }
 
   const result = {
