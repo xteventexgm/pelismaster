@@ -718,17 +718,29 @@
 
         // If Series: Episodes section
         if (detail.type === 'series') {
-          html += '<div class="detail-section" style="margin-top:24px;">'
-            + '<h2 class="row-title">Episodios</h2>';
+          html += '<div class="detail-section" style="margin-top:24px;">';
 
-          // Seasons selector pills
+          // Seasons selector combo box (Netflix style: compact, handles 1 to 40+ seasons smoothly)
           if (detail.seasons && detail.seasons.length > 0) {
-            html += '<div class="seasons-bar">';
-            for (var s = 0; s < detail.seasons.length; s++) {
-              var sObj = detail.seasons[s];
-              html += '<button class="pill-btn focusable season-tab' + (sObj.isCurrent ? ' active' : '') + '" data-season="' + sObj.seasonNumber + '">' + sObj.name + '</button>';
+            html += '<div class="episodes-header-row">'
+              + '<h2 class="row-title" style="margin-bottom:0;">Episodios</h2>';
+
+            if (detail.seasons.length > 1) {
+              html += '<div class="season-select-wrapper">'
+                + '<select id="detail-seasons-select" class="season-dropdown focusable" aria-label="Seleccionar temporada">';
+              for (var s = 0; s < detail.seasons.length; s++) {
+                var sObj = detail.seasons[s];
+                var isCur = (sObj.isCurrent || (detail.currentSeason && String(sObj.seasonNumber) === String(detail.currentSeason)));
+                html += '<option value="' + sObj.seasonNumber + '"' + (isCur ? ' selected' : '') + '>' + sObj.name + '</option>';
+              }
+              html += '</select>'
+                + '</div>';
+            } else {
+              html += '<span class="single-season-badge">' + (detail.seasons[0].name || 'Temporada 1') + '</span>';
             }
             html += '</div>';
+          } else {
+            html += '<h2 class="row-title">Episodios</h2>';
           }
 
           // Episodes list
@@ -799,15 +811,13 @@
           });
         }
 
-        // Bind Season Tabs
-        var seasonTabs = container.querySelectorAll('.season-tab');
-        for (var st = 0; st < seasonTabs.length; st++) {
-          (function(tab) {
-            tab.addEventListener('click', function() {
-              var seasonNum = tab.getAttribute('data-season');
-              self.switchSeason(detail.slug, seasonNum, tab);
-            });
-          })(seasonTabs[st]);
+        // Bind Season Dropdown Combo Box
+        var seasonSelect = document.getElementById('detail-seasons-select');
+        if (seasonSelect) {
+          seasonSelect.addEventListener('change', function() {
+            var seasonNum = this.value;
+            self.switchSeason(detail.slug, seasonNum);
+          });
         }
 
         // Bind Episode Cards
@@ -871,14 +881,15 @@
       }
     },
 
-    switchSeason: function(slug, seasonNum, activeTab) {
+    switchSeason: function(slug, seasonNum) {
       var self = this;
       var epContainer = document.getElementById('detail-episodes-list');
       if (epContainer) epContainer.innerHTML = '<div style="padding:20px; color:#aaa;">Cargando temporada ' + seasonNum + '...</div>';
 
-      var tabs = document.querySelectorAll('.season-tab');
-      for (var t = 0; t < tabs.length; t++) tabs[t].classList.remove('active');
-      activeTab.classList.add('active');
+      var seasonSelect = document.getElementById('detail-seasons-select');
+      if (seasonSelect && String(seasonSelect.value) !== String(seasonNum)) {
+        seasonSelect.value = String(seasonNum);
+      }
 
       Api.getDetail('series', slug + '/season/' + seasonNum, function(err, sDetail) {
         if (err || !sDetail || !sDetail.episodes) {

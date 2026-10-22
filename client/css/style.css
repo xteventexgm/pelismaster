@@ -709,12 +709,73 @@ body {
   margin-top: 3px;
 }
 
-/* Series Episodes List */
-.seasons-bar {
+/* Series Episodes Header & Season Dropdown (Netflix / HBO style) */
+.episodes-header-row {
   display: -webkit-flex;
   display: flex;
-  overflow-x: auto;
-  padding: 14px 0 24px;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  margin-top: 10px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.season-select-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.season-dropdown {
+  background: #202020;
+  color: #ffffff;
+  border: 1px solid #444;
+  padding: 10px 46px 10px 18px;
+  border-radius: 6px;
+  font-size: 17px;
+  font-weight: 700;
+  cursor: pointer;
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url('data:image/svg+xml;utf8,<svg fill="%23ffffff" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 22px;
+  min-width: 210px;
+  transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+}
+
+.season-dropdown:hover {
+  background-color: #2c2c2c;
+  border-color: #666;
+}
+
+.season-dropdown:focus,
+.season-dropdown.focused {
+  border-color: #e50914;
+  background-color: #282828;
+  box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.45);
+}
+
+.season-dropdown option {
+  background: #181818;
+  color: #fff;
+  padding: 12px 16px;
+  font-size: 16px;
+}
+
+.single-season-badge {
+  font-size: 15px;
+  font-weight: 700;
+  color: #aaa;
+  background: #222;
+  padding: 6px 14px;
+  border-radius: 4px;
+  border: 1px solid #333;
 }
 
 .episodes-list {

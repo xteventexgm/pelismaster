@@ -242,23 +242,84 @@
     startPlayback: function(url, resumeTime) {
       var self = this;
       this.video.pause();
-      this.video.removeAttribute('src');
 
-      // Native HLS support check
-      if (url.indexOf('.m3u8') !== -1) {
-        this.video.type = 'application/x-mpegURL';
-      } else {
-        this.video.type = 'video/mp4';
+      // Destroy any existing Hls instance
+      if (this.hls) {
+        try {
+          this.hls.destroy();
+        } catch(e) {}
+        this.hls = null;
       }
 
-      this.video.src = url;
-      this.video.load();
+      // Ensure relative URLs (/api/proxy/m3u8...) resolve with full origin if needed
+      if (url.indexOf('http://') !== 0 && url.indexOf('https://') !== 0) {
+        var baseOrigin = (window.Api && window.Api.getBaseUrl) ? window.Api.getBaseUrl().replace(/\/api\/?$/, '') : '';
+        url = baseOrigin + url;
+      }
 
-      var playPromise = this.video.play();
-      if (playPromise && playPromise.catch) {
-        playPromise.catch(function(e) {
-          console.warn('Autoplay prevented, retrying on interaction:', e);
+      var isHls = url.indexOf('.m3u8') !== -1;
+      var canPlayNativeHls = false;
+      try {
+        canPlayNativeHls = !!(this.video.canPlayType('application/vnd.apple.mpegurl') ||
+                              this.video.canPlayType('application/x-mpegURL'));
+      } catch(e) {}
+
+      // If browser cannot play HLS natively (e.g. desktop Chrome/Edge) and Hls.js is loaded
+      if (isHls && !canPlayNativeHls && window.Hls && Hls.isSupported()) {
+        this.video.removeAttribute('src');
+        this.hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: false,
+          backBufferLength: 90
         });
+        this.hls.loadSource(url);
+        this.hls.attachMedia(this.video);
+
+        this.hls.on(Hls.Events.MANIFEST_PARSED, function() {
+          var p = self.video.play();
+          if (p && p.catch) {
+            p.catch(function(e) {
+              console.warn('Autoplay prevented, retrying on interaction:', e);
+            });
+          }
+        });
+
+        this.hls.on(Hls.Events.ERROR, function(event, data) {
+          if (data.fatal) {
+            console.error('Fatal HLS error:', data.type, data.details);
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                console.warn('HLS Network error, attempting recovery...');
+                self.hls.startLoad();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                console.warn('HLS Media error, attempting recovery...');
+                self.hls.recoverMediaError();
+                break;
+              default:
+                self.hls.destroy();
+                self.showSpinner(false);
+                break;
+            }
+          }
+        });
+      } else {
+        // Native HLS (webOS TV / Safari) or direct MP4
+        this.video.removeAttribute('src');
+        if (isHls) {
+          this.video.type = 'application/x-mpegURL';
+        } else {
+          this.video.type = 'video/mp4';
+        }
+        this.video.src = url;
+        this.video.load();
+
+        var playPromise = this.video.play();
+        if (playPromise && playPromise.catch) {
+          playPromise.catch(function(e) {
+            console.warn('Autoplay prevented, retrying on interaction:', e);
+          });
+        }
       }
 
       if (resumeTime && resumeTime > 5) {
@@ -312,6 +373,13 @@
       this.scrubClickCount = 0;
       if (this.seekBubble) this.seekBubble.style.display = 'none';
       this.hideNextCountdown();
+
+      if (this.hls) {
+        try {
+          this.hls.destroy();
+        } catch(e) {}
+        this.hls = null;
+      }
 
       this.video.pause();
       this.video.removeAttribute('src');

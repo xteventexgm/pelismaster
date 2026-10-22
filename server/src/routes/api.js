@@ -117,9 +117,76 @@ router.get('/stream/:type/:slug', async (req, res) => {
   }
 });
 
+// GET /api/proxy/m3u8?url=...
+// Proxies m3u8 playlists through this server to avoid 403 "sesión no coincide" IP session errors on cloud deployments
+router.get('/proxy/m3u8', async (req, res) => {
+  try {
+    const rawUrl = req.query.url;
+    if (!rawUrl) {
+      return res.status(400).send('Missing url parameter');
+    }
+
+    const targetUrl = decodeURIComponent(rawUrl);
+    const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+    const m3uRes = await fetch(targetUrl, {
+      headers: {
+        'Referer': 'https://pelismaster.com/',
+        'User-Agent': USER_AGENT,
+        'Accept': '*/*'
+      },
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (!m3uRes.ok) {
+      return res.status(m3uRes.status).send(`Failed to fetch m3u8: HTTP ${m3uRes.status}`);
+    }
+
+    const playlistText = await m3uRes.text();
+
+    // Parse and rewrite nested .m3u8 / moviemaster links to route through this proxy
+    const lines = playlistText.split('\n');
+    const rewritten = lines.map(line => {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) return line;
+
+      let absUrl = trimmed;
+      if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+        try {
+          absUrl = new URL(trimmed, targetUrl).href;
+        } catch(e) {
+          absUrl = trimmed;
+        }
+      }
+
+      // If this line is another playlist (.m3u8 or moviemaster.lat /s/ stream), proxy it
+      if (absUrl.includes('.m3u8') || absUrl.includes('moviemaster.lat')) {
+        return `/api/proxy/m3u8?url=${encodeURIComponent(absUrl)}`;
+      }
+
+      // Direct media segment chunk (TikTok CDN, Akamai, etc.) stays direct for max speed
+      return absUrl;
+    }).join('\n');
+
+    res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', '*');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.send(rewritten);
+  } catch (err) {
+    console.error('m3u8 proxy error:', err.message);
+    res.status(500).send(err.message);
+  }
+});
+
 // Ping endpoint
 router.get('/ping', (req, res) => {
   res.json({ ok: true, message: 'PelisMaster TV Server activo', timestamp: Date.now() });
 });
 
 export default router;
+
